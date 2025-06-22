@@ -29,8 +29,6 @@
             cursor: pointer; transition: background 0.3s; margin: 0.5rem;
         }
         .button:hover { background: #b91c1c; }
-        .button.secondary { background: #2563eb; }
-        .button.secondary:hover { background: #1d4ed8; }
         #hud {
             position: absolute; top: 20px; left: 20px; z-index: 100;
         }
@@ -55,18 +53,18 @@
 <body>
     <div id="gameContainer">
         <!-- Menu Principal -->
-    <div id="menuScreen">
-    <h1 class="title" style="color: #dc2626;">FPS ARENA</h1>
-    <p class="subtitle">Affrontez 24 ennemis de 8 types différents avec vos personnages custom !</p>
-    <div style="margin-bottom: 2rem;">
-        <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
-    </div>
-    <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">Contrôles :</h3>
-        <p style="font-size: 0.9rem;">WASD - Déplacement | Souris - Regarder | Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre</p>
-    </div>
-</div>
-    
+        <div id="menuScreen">
+            <h1 class="title" style="color: #dc2626;">FPS ARENA</h1>
+            <p class="subtitle">Affrontez 8 vagues d’ennemis !</p>
+            <div style="margin-bottom: 2rem;">
+                <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem;">Contrôles :</h3>
+                <p style="font-size: 0.9rem;">WASD - Déplacement | Souris - Regarder | Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre</p>
+            </div>
+        </div>
+        
         <!-- Écran Game Over -->
         <div id="gameOverScreen">
             <h1 class="title" style="color: #dc2626;">GAME OVER</h1>
@@ -79,7 +77,7 @@
         <div id="victoryScreen">
             <h1 class="title" style="color: #ffd700;">VICTOIRE !</h1>
             <p class="subtitle">Score final: <span id="victoryScore">0</span></p>
-            <p style="margin-bottom: 2rem;">Vous avez éliminé tous les ennemis !</p>
+            <p style="margin-bottom: 2rem;">Vous avez éliminé toutes les vagues !</p>
             <button class="button" onclick="restartGame()">NOUVELLE PARTIE</button>
         </div>
         
@@ -88,7 +86,8 @@
             <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
             <div class="hud-item">Vie: <span id="healthDisplay">100</span>/100</div>
             <div class="hud-item">Munitions: <span id="ammoDisplay">30</span>/30</div>
-            <div class="hud-item">Ennemis: <span id="enemiesDisplay">24</span></div>
+            <div class="hud-item">Ennemis: <span id="enemiesDisplay">0</span></div>
+            <div class="hud-item">Vague: <span id="waveDisplay">1</span>/8</div>
         </div>
         
         <!-- Réticule -->
@@ -115,7 +114,7 @@
             health: 100,
             ammo: 30,
             score: 0,
-            enemiesLeft: 24,
+            enemiesLeft: 0,
             gameStarted: false,
             gameOver: false,
             victory: false
@@ -133,21 +132,23 @@
             { name: 'Zombie', image: 'zombie.png', health: 60, speed: 1, damage: 12, size: 2.7, color: 0x556b2f }
         ];
 
+        // Définition des vagues personnalisées
+        const waves = [
+            { type: 'Renard', count: 6 },
+            { type: 'Brocoli', count: 8 },
+            { type: 'Loup', count: 10 },
+            { type: 'Artichaut', count: 12 },
+            { type: 'Samouraï', count: 14 },
+            { type: 'Zombie', count: 16 },
+            { type: 'Viking', count: 18 },
+            { type: 'Hydre', count: 3 }
+        ];
+        let currentWave = 0;
+        let totalWaves = waves.length;
+
         // Charger image locale automatiquement
         function loadEnemyImage(enemyType) {
             return enemyType.image;
-        }
-
-        // Fonction simplifiée pour tester les images (console)
-        function testImageAvailability() {
-            console.log("=== TEST DES IMAGES ===");
-            console.log("Placez vos fichiers dans le dossier du jeu :");
-            enemyTypes.forEach(type => {
-                const testImg = new Image();
-                testImg.onload = () => { console.log(`✅ ${type.image} → OK`); };
-                testImg.onerror = () => { console.log(`❌ ${type.image} → Fichier NON TROUVÉ`); };
-                testImg.src = type.image + '?t=' + Date.now();
-            });
         }
 
         // Fonction pour créer un ennemi avec image automatique
@@ -189,6 +190,34 @@
             return enemy;
         }
 
+        function createEnemiesForWave(waveNumber) {
+            enemies = [];
+            let wave = waves[waveNumber];
+            if (!wave) return;
+            const enemyType = enemyTypes.find(e => e.name === wave.type);
+            for (let i = 0; i < wave.count; i++) {
+                let x, z;
+                do {
+                    x = (Math.random() - 0.5) * 60;
+                    z = (Math.random() - 0.5) * 60;
+                } while (Math.sqrt(x * x + z * z) < 8);
+                const position = new THREE.Vector3(x, enemyType.size / 2, z);
+                const enemy = createEnemyWithImage(enemyType, position);
+                enemy.userData = {
+                    type: enemyType.name,
+                    health: enemyType.health,
+                    maxHealth: enemyType.health,
+                    speed: enemyType.speed,
+                    damage: enemyType.damage,
+                    lastAttack: 0,
+                    direction: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize()
+                };
+                scene.add(enemy);
+                enemies.push(enemy);
+            }
+            gameState.enemiesLeft = enemies.length;
+        }
+
         function restartGame() {
             document.getElementById('gameOverScreen').style.display = 'none';
             document.getElementById('victoryScreen').style.display = 'none';
@@ -215,7 +244,7 @@
                 health: 100,
                 ammo: 30,
                 score: 0,
-                enemiesLeft: 24,
+                enemiesLeft: 0,
                 gameStarted: false,
                 gameOver: false,
                 victory: false
@@ -276,7 +305,8 @@
             scene.add(pointLight);
 
             createEnvironment();
-            createEnemies();
+            currentWave = 0;
+            createEnemiesForWave(currentWave);
             setupControls();
             updateHUD();
 
@@ -285,7 +315,7 @@
             animate();
         }
 
-        // Création de l'environnement
+        // Création de l'environnement (identique)
         function createEnvironment() {
             const floorGeometry = new THREE.PlaneGeometry(100, 100);
             const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x506050, transparent: false });
@@ -336,32 +366,6 @@
                 cube.receiveShadow = true;
                 scene.add(cube);
             }
-        }
-
-        function createEnemies() {
-            enemyTypes.forEach((enemyType) => {
-                for (let i = 0; i < 3; i++) {
-                    let x, z;
-                    do {
-                        x = (Math.random() - 0.5) * 60;
-                        z = (Math.random() - 0.5) * 60;
-                    } while (Math.sqrt(x*x + z*z) < 8);
-                    const position = new THREE.Vector3(x, enemyType.size/2, z);
-                    const enemy = createEnemyWithImage(enemyType, position);
-                    enemy.userData = {
-                        type: enemyType.name,
-                        health: enemyType.health,
-                        maxHealth: enemyType.health,
-                        speed: enemyType.speed,
-                        damage: enemyType.damage,
-                        lastAttack: 0,
-                        direction: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize()
-                    };
-                    scene.add(enemy);
-                    enemies.push(enemy);
-                }
-            });
-            gameState.enemiesLeft = enemies.length;
         }
 
         function startGame() { initGame(); }
@@ -463,9 +467,18 @@
                     gameState.score += points;
                     gameState.enemiesLeft = enemies.length;
                     updateHUD();
+                    // Gestion des vagues
                     if (enemies.length === 0) {
-                        gameState.victory = true;
-                        showVictory();
+                        if (currentWave < totalWaves - 1) {
+                            currentWave++;
+                            setTimeout(() => {
+                                createEnemiesForWave(currentWave);
+                                updateHUD();
+                            }, 1500);
+                        } else {
+                            gameState.victory = true;
+                            showVictory();
+                        }
                     }
                     return;
                 }
@@ -557,6 +570,7 @@
             document.getElementById('healthDisplay').textContent = gameState.health;
             document.getElementById('ammoDisplay').textContent = gameState.ammo;
             document.getElementById('enemiesDisplay').textContent = gameState.enemiesLeft;
+            document.getElementById('waveDisplay').textContent = (currentWave + 1);
         }
 
         function showGameOver() {
