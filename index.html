@@ -55,40 +55,17 @@
 <body>
     <div id="gameContainer">
         <!-- Menu Principal -->
-        <div id="menuScreen">
-            <h1 class="title" style="color: #dc2626;">FPS ARENA</h1>
-            <p class="subtitle">Affrontez 24 ennemis de 8 types différents avec vos personnages custom !</p>
-            <div style="margin-bottom: 2rem;">
-                <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
-                <button class="button secondary" onclick="testImageAvailability(); alert('Vérifiez la console (F12) pour voir l\'état des images!')">🔍 TESTER LES IMAGES</button>
-            </div>
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Types d'ennemis :</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; font-size: 0.9rem;">
-                    <div>
-                        <p>🫒 Artichaut - Très résistant, 150 PV (30pts)</p>
-                        <p>🥦 Brocoli - Tanky, 120 PV (25pts)</p>
-                        <p>🐉 Hydre - Boss final, 300 PV (100pts)</p>
-                        <p>🐺 Loup - Charge rapide, 100 PV (20pts)</p>
-                    </div>
-                    <div>
-                        <p>🦊 Renard - Agile, 80 PV (15pts)</p>
-                        <p>🗾 Samouraï - Précis, 180 PV (50pts)</p>
-                        <p>⚔️ Viking - Puissant, 200 PV (40pts)</p>
-                        <p>🧟 Zombie - Lent, 60 PV (5pts)</p>
-                    </div>
-                </div>
-            </div>
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Contrôles :</h3>
-                <p style="font-size: 0.9rem;">WASD - Déplacement | Souris - Regarder | Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre</p>
-            </div>
-            <div style="font-size: 0.8rem; color: #ccc; max-width: 600px;">
-                <p><strong>💡 Placez simplement vos fichiers PNG avec les noms exacts dans le dossier du jeu :</strong></p>
-                <p>artichaut.png, brocoli.png, hydre.png, loup.png, renard.png, samourai.png, viking.png, zombie.png</p>
-                <p>Pas besoin de les charger manuellement !</p>
-            </div>
-        </div>
+    <div id="menuScreen">
+    <h1 class="title" style="color: #dc2626;">FPS ARENA</h1>
+    <p class="subtitle">Affrontez 24 ennemis de 8 types différents avec vos personnages custom !</p>
+    <div style="margin-bottom: 2rem;">
+        <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
+    </div>
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Contrôles :</h3>
+        <p style="font-size: 0.9rem;">WASD - Déplacement | Souris - Regarder | Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre</p>
+    </div>
+</div>
         
         <!-- Écran Game Over -->
         <div id="gameOverScreen">
