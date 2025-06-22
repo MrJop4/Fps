@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPS Arena</title>
+    <title>FPS Arena - Par Vagues</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; overflow: hidden; }
         #gameContainer { width: 100vw; height: 100vh; position: relative; }
-        #menuScreen {
+        
+        .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
             display: flex; align-items: center; justify-content: center;
             flex-direction: column; z-index: 1000;
         }
-        #gameOverScreen, #victoryScreen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; align-items: center; justify-content: center; flex-direction: column; z-index: 1000;
-        }
-        #gameOverScreen { background: rgba(0,0,0,0.9);}
-        #victoryScreen { background: linear-gradient(135deg, #ffd700, #ff8c00);}
-        .title { font-size: 4rem; font-weight: bold; margin-bottom: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);}
-        .subtitle { font-size: 1.5rem; margin-bottom: 2rem;}
+        
+        #menuScreen { background: linear-gradient(135deg, #1a1a1a, #2d2d2d); }
+        #waveCompleteScreen { background: linear-gradient(135deg, #004d00, #008000); display: none; }
+        #gameOverScreen { background: rgba(0,0,0,0.9); display: none; }
+        #victoryScreen { background: linear-gradient(135deg, #ffd700, #ff8c00); display: none; }
+        
+        .title { font-size: 4rem; font-weight: bold; margin-bottom: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .subtitle { font-size: 1.5rem; margin-bottom: 2rem; text-align: center; }
+        
         .button {
             padding: 1rem 2rem; font-size: 1.2rem; font-weight: bold;
             background: #dc2626; color: white; border: none; border-radius: 8px;
             cursor: pointer; transition: background 0.3s; margin: 0.5rem;
         }
         .button:hover { background: #b91c1c; }
+        
         #hud {
             position: absolute; top: 20px; left: 20px; z-index: 100;
         }
@@ -36,58 +38,74 @@
             background: rgba(0, 0, 0, 0.7); padding: 10px 15px;
             margin-bottom: 10px; border-radius: 5px; font-size: 1.2rem; font-weight: bold;
         }
+        
         #crosshair {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             width: 20px; height: 20px; border: 2px solid white;
             border-radius: 50%; opacity: 0.7; z-index: 50;
         }
+        
         #instructions {
             position: absolute; bottom: 20px; left: 20px;
             background: rgba(0, 0, 0, 0.7);
             padding: 10px 15px; border-radius: 5px; font-size: 0.9rem; z-index: 50;
         }
+        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <!-- Menu Principal -->
-        <div id="menuScreen">
-            <h1 class="title" style="color: #dc2626;">FPS ARENA</h1>
-            <p class="subtitle">Affrontez 8 vagues d’ennemis !</p>
-            <div style="margin-bottom: 2rem;">
-                <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
+        <div id="menuScreen" class="screen">
+            <h1 class="title" style="color: #dc2626;">🎯 FPS ARENA</h1>
+            <p class="subtitle">Affrontez 8 vagues d'ennemis de plus en plus difficiles !</p>
+            <button class="button" onclick="startGame()">🎮 COMMENCER LA BATAILLE</button>
+            <div style="margin-top: 2rem; text-align: center;">
+                <h3>Contrôles :</h3>
+                <p style="font-size: 0.9rem; margin-top: 1rem;">
+                    WASD - Déplacement | Souris - Regarder<br>
+                    Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre
+                </p>
             </div>
-            <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Contrôles :</h3>
-                <p style="font-size: 0.9rem;">WASD - Déplacement | Souris - Regarder | Clic gauche - Tirer | ESPACE/SHIFT - Monter/Descendre</p>
-            </div>
+        </div>
+        
+        <!-- Écran Entre les Vagues -->
+        <div id="waveCompleteScreen" class="screen">
+            <h1 class="title">🎉 VAGUE TERMINÉE !</h1>
+            <p class="subtitle">Score: <span id="waveScore">0</span> points</p>
+            <p class="subtitle">Préparez-vous pour la vague <span id="nextWaveNumber">2</span></p>
+            <p style="margin-bottom: 2rem; text-align: center;" id="nextEnemyInfo">
+                Prochain ennemi: <span id="nextEnemyName">Brocoli</span>
+            </p>
+            <button class="button" onclick="startNextWave()">▶️ COMMENCER LA VAGUE</button>
         </div>
         
         <!-- Écran Game Over -->
-        <div id="gameOverScreen">
-            <h1 class="title" style="color: #dc2626;">GAME OVER</h1>
-            <p class="subtitle">Score final: <span id="finalScore">0</span></p>
-            <p style="margin-bottom: 2rem;">Vous avez été éliminé par les ennemis !</p>
-            <button class="button" onclick="restartGame()">REJOUER</button>
+        <div id="gameOverScreen" class="screen">
+            <h1 class="title" style="color: #dc2626;">💀 GAME OVER</h1>
+            <p class="subtitle">Score final: <span id="finalScore">0</span> points</p>
+            <p style="margin-bottom: 2rem;">Vous avez été éliminé à la vague <span id="deathWave">1</span></p>
+            <button class="button" onclick="restartGame()">🔄 REJOUER</button>
         </div>
         
-        <!-- Écran Victoire -->
-        <div id="victoryScreen">
-            <h1 class="title" style="color: #ffd700;">VICTOIRE !</h1>
-            <p class="subtitle">Score final: <span id="victoryScore">0</span></p>
-            <p style="margin-bottom: 2rem;">Vous avez éliminé toutes les vagues !</p>
-            <button class="button" onclick="restartGame()">NOUVELLE PARTIE</button>
+        <!-- Écran Victoire Finale -->
+        <div id="victoryScreen" class="screen">
+            <h1 class="title" style="color: #ffd700;">🏆 VICTOIRE TOTALE !</h1>
+            <p class="subtitle">Score final: <span id="victoryScore">0</span> points</p>
+            <p style="margin-bottom: 2rem;">Vous avez triomphé de toutes les 8 vagues !</p>
+            <p style="margin-bottom: 2rem;">🎖️ Vous êtes un véritable champion ! 🎖️</p>
+            <button class="button" onclick="restartGame()">🆕 NOUVELLE PARTIE</button>
         </div>
         
         <!-- HUD du jeu -->
         <div id="hud" class="hidden">
-            <div class="hud-item">Score: <span id="scoreDisplay">0</span></div>
-            <div class="hud-item">Vie: <span id="healthDisplay">100</span>/100</div>
-            <div class="hud-item">Munitions: <span id="ammoDisplay">30</span>/30</div>
-            <div class="hud-item">Ennemis: <span id="enemiesDisplay">0</span></div>
-            <div class="hud-item">Vague: <span id="waveDisplay">1</span>/8</div>
+            <div class="hud-item">❤️ Vie: <span id="healthDisplay">100</span>/100</div>
+            <div class="hud-item">🔫 Munitions: <span id="ammoDisplay">30</span>/30</div>
+            <div class="hud-item">🎯 Score: <span id="scoreDisplay">0</span></div>
+            <div class="hud-item">👹 Ennemis: <span id="enemiesDisplay">0</span></div>
+            <div class="hud-item">🌊 Vague: <span id="waveDisplay">1</span>/8</div>
         </div>
         
         <!-- Réticule -->
@@ -95,12 +113,12 @@
         
         <!-- Instructions -->
         <div id="instructions" class="hidden">
-            Cliquez pour verrouiller la souris • WASD pour bouger • Clic gauche pour tirer • ESPACE/SHIFT pour monter/descendre
+            Cliquez pour verrouiller la souris • WASD - Bouger • Clic gauche - Tirer
         </div>
     </div>
 
     <script>
-        // Variables globales
+        // === VARIABLES GLOBALES ===
         let scene, camera, renderer, clock;
         let player = { x: 0, y: 1.8, z: 0 };
         let enemies = [];
@@ -110,269 +128,270 @@
         let keys = {};
         let isPointerLocked = false;
         let lastShot = 0;
+
         let gameState = {
             health: 100,
+            maxHealth: 100,
             ammo: 30,
+            maxAmmo: 30,
             score: 0,
-            enemiesLeft: 0,
+            currentWave: 0,
+            totalWaves: 8,
             gameStarted: false,
             gameOver: false,
-            victory: false
+            victory: false,
+            wavePaused: false
         };
 
-        // Types d'ennemis avec chemins d'images locaux
+        // === DÉFINITION DES ENNEMIS (DANS L'ORDRE DES IMAGES) ===
         const enemyTypes = [
-            { name: 'Artichaut', image: 'artichaut.png', health: 150, speed: 1, damage: 25, size: 3.5, color: 0x8fbc8f },
-            { name: 'Brocoli', image: 'brocoli.png', health: 120, speed: 1.5, damage: 20, size: 3.2, color: 0x00ff00 },
-            { name: 'Hydre', image: 'hydre.png', health: 300, speed: 0.8, damage: 40, size: 4.5, color: 0x9acd32 },
-            { name: 'Loup', image: 'loup.png', health: 100, speed: 5, damage: 18, size: 2.8, color: 0x8b4513 },
-            { name: 'Renard', image: 'renard.png', health: 80, speed: 4, damage: 15, size: 2.5, color: 0xff6600 },
-            { name: 'Samouraï', image: 'samourai.png', health: 180, speed: 3, damage: 35, size: 3, color: 0xdc143c },
-            { name: 'Viking', image: 'viking.png', health: 200, speed: 2.5, damage: 30, size: 4, color: 0xdeb887 },
-            { name: 'Zombie', image: 'zombie.png', health: 60, speed: 1, damage: 12, size: 2.7, color: 0x556b2f }
+            { name: 'Artichaut', health: 100, speed: 1.5, damage: 15, count: 5, color: 0x8fbc8f, size: 2.5 },
+            { name: 'Brocoli', health: 120, speed: 2, damage: 18, count: 6, color: 0x00ff00, size: 2.8 },
+            { name: 'Hydre', health: 200, speed: 1, damage: 30, count: 4, color: 0x9acd32, size: 3.5 },
+            { name: 'Loup', health: 80, speed: 4, damage: 20, count: 8, color: 0x8b4513, size: 2.2 },
+            { name: 'Renard', health: 70, speed: 5, damage: 15, count: 10, color: 0xff6600, size: 2 },
+            { name: 'Samourai', health: 150, speed: 2.5, damage: 35, count: 7, color: 0xdc143c, size: 3 },
+            { name: 'Viking', health: 180, speed: 2, damage: 40, count: 6, color: 0xdeb887, size: 3.2 },
+            { name: 'Zombie', health: 60, speed: 1, damage: 25, count: 12, color: 0x556b2f, size: 2.5 }
         ];
 
-        // Définition des vagues personnalisées
-        const waves = [
-            { type: 'Renard', count: 6 },
-            { type: 'Brocoli', count: 8 },
-            { type: 'Loup', count: 10 },
-            { type: 'Artichaut', count: 12 },
-            { type: 'Samouraï', count: 14 },
-            { type: 'Zombie', count: 16 },
-            { type: 'Viking', count: 18 },
-            { type: 'Hydre', count: 3 }
-        ];
-        let currentWave = 0;
-        let totalWaves = waves.length;
-
-        // Charger image locale automatiquement
-        function loadEnemyImage(enemyType) {
-            return enemyType.image;
-        }
-
-        // Fonction pour créer un ennemi avec image automatique
-        function createEnemyWithImage(enemyType, position) {
-            // Cube par défaut
-            const geometry = new THREE.BoxGeometry(2, enemyType.size, 2);
-            const material = new THREE.MeshLambertMaterial({ color: enemyType.color, transparent: false });
-            const enemy = new THREE.Mesh(geometry, material);
-            enemy.castShadow = true;
-            enemy.receiveShadow = true;
-            enemy.position.copy(position);
-
-            // Charger l'image locale
-            const imageSource = loadEnemyImage(enemyType);
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(
-                imageSource,
-                // Succès
-                (texture) => {
-                    texture.magFilter = THREE.NearestFilter;
-                    texture.minFilter = THREE.NearestFilter;
-                    const spriteMaterial = new THREE.SpriteMaterial({
-                        map: texture, transparent: true, alphaTest: 0.1
-                    });
-                    const sprite = new THREE.Sprite(spriteMaterial);
-                    sprite.scale.set(enemyType.size, enemyType.size, 1);
-                    sprite.position.copy(enemy.position);
-                    sprite.userData = enemy.userData;
-                    // Remplacer le cube par le sprite
-                    scene.remove(enemy);
-                    scene.add(sprite);
-                    const enemyIndex = enemies.indexOf(enemy);
-                    if (enemyIndex !== -1) enemies[enemyIndex] = sprite;
-                },
-                undefined,
-                // Erreur : on garde le cube
-                (err) => { }
-            );
-            return enemy;
-        }
-
-        function createEnemiesForWave(waveNumber) {
-            enemies = [];
-            let wave = waves[waveNumber];
-            if (!wave) return;
-            const enemyType = enemyTypes.find(e => e.name === wave.type);
-            for (let i = 0; i < wave.count; i++) {
-                let x, z;
-                do {
-                    x = (Math.random() - 0.5) * 60;
-                    z = (Math.random() - 0.5) * 60;
-                } while (Math.sqrt(x * x + z * z) < 8);
-                const position = new THREE.Vector3(x, enemyType.size / 2, z);
-                const enemy = createEnemyWithImage(enemyType, position);
-                enemy.userData = {
-                    type: enemyType.name,
-                    health: enemyType.health,
-                    maxHealth: enemyType.health,
-                    speed: enemyType.speed,
-                    damage: enemyType.damage,
-                    lastAttack: 0,
-                    direction: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize()
-                };
-                scene.add(enemy);
-                enemies.push(enemy);
-            }
-            gameState.enemiesLeft = enemies.length;
-        }
-
-        function restartGame() {
-            document.getElementById('gameOverScreen').style.display = 'none';
-            document.getElementById('victoryScreen').style.display = 'none';
-            document.getElementById('hud').classList.add('hidden');
-            document.getElementById('crosshair').classList.add('hidden');
-            document.getElementById('instructions').classList.add('hidden');
-            document.getElementById('menuScreen').style.display = 'flex';
-
-            // Nettoyer le renderer
-            if (renderer && renderer.domElement && renderer.domElement.parentNode) {
-                renderer.domElement.parentNode.removeChild(renderer.domElement);
-            }
-
-            // Nettoyer la scène
-            if (scene) {
-                while(scene.children.length > 0){ scene.remove(scene.children[0]); }
-            }
-
-            // Reset du jeu
-            enemies = [];
-            bullets = [];
-            walls = [];
+        // === FONCTIONS D'INITIALISATION ===
+        function startGame() {
+            console.log("🎮 Démarrage du jeu");
+            hideAllScreens();
+            showGameElements();
+            
             gameState = {
                 health: 100,
+                maxHealth: 100,
                 ammo: 30,
+                maxAmmo: 30,
                 score: 0,
-                enemiesLeft: 0,
-                gameStarted: false,
+                currentWave: 0,
+                totalWaves: 8,
+                gameStarted: true,
                 gameOver: false,
-                victory: false
+                victory: false,
+                wavePaused: false
             };
-            player = { x: 0, y: 1.8, z: 0 };
-            mouse = { x: 0, y: 0 };
-            keys = {};
-            isPointerLocked = false;
+
+            initThreeJS();
+            createEnvironment();
+            setupControls();
+            
+            // Commencer la première vague
+            startWave(0);
+            
+            animate();
         }
 
-        // Initialisation du jeu
-        function initGame() {
-            // Cacher les menus
-            document.getElementById('menuScreen').style.display = 'none';
-            document.getElementById('gameOverScreen').style.display = 'none';
-            document.getElementById('victoryScreen').style.display = 'none';
-            // Afficher le HUD
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('crosshair').classList.remove('hidden');
-            document.getElementById('instructions').classList.remove('hidden');
+        function initThreeJS() {
+            // Nettoyer l'ancien renderer s'il existe
+            const existingCanvas = document.querySelector('canvas');
+            if (existingCanvas) existingCanvas.remove();
 
-            gameState.gameStarted = true;
-            gameState.gameOver = false;
-            gameState.victory = false;
-
-            // Reset des variables
-            enemies = [];
-            bullets = [];
-            walls = [];
-            player = { x: 0, y: 1.8, z: 0 };
-
-            // Initialisation de Three.js
+            // Nouvelle scène
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87CEEB); // Ciel bleu
+            scene.background = new THREE.Color(0x87CEEB);
+
+            // Caméra
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 1.8, 0);
+
+            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            const gameContainer = document.getElementById('gameContainer');
-            gameContainer.appendChild(renderer.domElement);
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+
             clock = new THREE.Clock();
 
-            // Lumières améliorées
+            // Lumières
             const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
+            
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(50, 50, 50);
             directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 500;
             scene.add(directionalLight);
-            const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
-            pointLight.position.set(0, 10, 0);
-            scene.add(pointLight);
-
-            createEnvironment();
-            currentWave = 0;
-            createEnemiesForWave(currentWave);
-            setupControls();
-            updateHUD();
-
-            setTimeout(() => { debugGame(); }, 1000);
-
-            animate();
         }
 
-        // Création de l'environnement (identique)
         function createEnvironment() {
+            walls = [];
+
+            // Sol
             const floorGeometry = new THREE.PlaneGeometry(100, 100);
-            const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x506050, transparent: false });
+            const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x4a5d23 });
             const floor = new THREE.Mesh(floorGeometry, floorMaterial);
             floor.rotation.x = -Math.PI / 2;
-            floor.position.y = 0;
             floor.receiveShadow = true;
             scene.add(floor);
 
+            // Murs de bordure
             const wallPositions = [
-                { x: 0, z: -50, width: 100, height: 10, depth: 2 },
-                { x: 0, z: 50, width: 100, height: 10, depth: 2 },
-                { x: -50, z: 0, width: 2, height: 10, depth: 100 },
-                { x: 50, z: 0, width: 2, height: 10, depth: 100 }
+                { x: 0, z: -50, width: 100, height: 8, depth: 2 },
+                { x: 0, z: 50, width: 100, height: 8, depth: 2 },
+                { x: -50, z: 0, width: 2, height: 8, depth: 100 },
+                { x: 50, z: 0, width: 2, height: 8, depth: 100 }
             ];
-            wallPositions.forEach((wall) => {
-                const geometry = new THREE.BoxGeometry(wall.width, wall.height, wall.depth);
-                const material = new THREE.MeshLambertMaterial({ color: 0x8B4513, transparent: false });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(wall.x, wall.height/2, wall.z);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                scene.add(mesh);
-                walls.push(mesh);
+
+            wallPositions.forEach(wallData => {
+                const geometry = new THREE.BoxGeometry(wallData.width, wallData.height, wallData.depth);
+                const material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const wall = new THREE.Mesh(geometry, material);
+                wall.position.set(wallData.x, wallData.height/2, wallData.z);
+                wall.castShadow = true;
+                wall.receiveShadow = true;
+                scene.add(wall);
+                walls.push(wall);
             });
 
-            const obstacleColors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffa500, 0x800080, 0x008000, 0xffc0cb];
-            for (let i = 0; i < 10; i++) {
-                const geometry = new THREE.BoxGeometry(3, 6, 3);
-                const material = new THREE.MeshLambertMaterial({ color: obstacleColors[i] || Math.random() * 0xffffff, transparent: false });
+            // Quelques obstacles
+            for (let i = 0; i < 8; i++) {
+                const geometry = new THREE.BoxGeometry(3, 5, 3);
+                const material = new THREE.MeshLambertMaterial({ 
+                    color: [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffa500, 0x800080][i] 
+                });
                 const obstacle = new THREE.Mesh(geometry, material);
-                const x = (Math.random() - 0.5) * 60;
-                const z = (Math.random() - 0.5) * 60;
-                obstacle.position.set(x, 3, z);
+                
+                let x, z;
+                do {
+                    x = (Math.random() - 0.5) * 80;
+                    z = (Math.random() - 0.5) * 80;
+                } while (Math.sqrt(x*x + z*z) < 10);
+                
+                obstacle.position.set(x, 2.5, z);
                 obstacle.castShadow = true;
                 obstacle.receiveShadow = true;
                 scene.add(obstacle);
                 walls.push(obstacle);
             }
-            for (let i = 0; i < 4; i++) {
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: false });
-                const cube = new THREE.Mesh(geometry, material);
-                const angle = (i / 4) * Math.PI * 2;
-                const distance = 5;
-                cube.position.set(Math.cos(angle) * distance, 0.5, Math.sin(angle) * distance);
-                cube.castShadow = true;
-                cube.receiveShadow = true;
-                scene.add(cube);
+        }
+
+        // === GESTION DES VAGUES ===
+        function startWave(waveIndex) {
+            console.log(`🌊 Démarrage de la vague ${waveIndex + 1}`);
+            
+            gameState.currentWave = waveIndex;
+            gameState.wavePaused = false;
+            
+            // Nettoyer les anciens ennemis
+            enemies.forEach(enemy => scene.remove(enemy));
+            enemies = [];
+            
+            // Créer les nouveaux ennemis
+            const enemyType = enemyTypes[waveIndex];
+            for (let i = 0; i < enemyType.count; i++) {
+                createEnemy(enemyType);
+            }
+            
+            updateHUD();
+            console.log(`✅ Vague ${waveIndex + 1} créée: ${enemyType.count} ${enemyType.name}`);
+        }
+
+        function createEnemy(enemyType) {
+            // Créer le cube ennemi (fallback)
+            const geometry = new THREE.BoxGeometry(enemyType.size, enemyType.size, enemyType.size);
+            const material = new THREE.MeshLambertMaterial({ color: enemyType.color });
+            const enemy = new THREE.Mesh(geometry, material);
+            
+            // Position aléatoire (loin du joueur)
+            let x, z;
+            do {
+                x = (Math.random() - 0.5) * 80;
+                z = (Math.random() - 0.5) * 80;
+            } while (Math.sqrt(x*x + z*z) < 15);
+            
+            enemy.position.set(x, enemyType.size/2, z);
+            enemy.castShadow = true;
+            enemy.receiveShadow = true;
+            
+            // Données de l'ennemi
+            enemy.userData = {
+                type: enemyType.name,
+                health: enemyType.health,
+                maxHealth: enemyType.health,
+                speed: enemyType.speed,
+                damage: enemyType.damage,
+                lastAttack: 0
+            };
+            
+            scene.add(enemy);
+            enemies.push(enemy);
+            
+            // Essayer de charger l'image PNG pour remplacer le cube
+            loadEnemyImage(enemy, enemyType);
+        }
+
+        function loadEnemyImage(enemy, enemyType) {
+            // Nom du fichier image basé sur le nom de l'ennemi
+            const imageFileName = enemyType.name.toLowerCase() + '.png';
+            
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                imageFileName,
+                // Succès - Remplacer le cube par un sprite
+                (texture) => {
+                    console.log(`✅ Image chargée: ${imageFileName}`);
+                    
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    
+                    const spriteMaterial = new THREE.SpriteMaterial({
+                        map: texture,
+                        transparent: true,
+                        alphaTest: 0.1
+                    });
+                    
+                    const sprite = new THREE.Sprite(spriteMaterial);
+                    sprite.scale.set(enemyType.size, enemyType.size, 1);
+                    sprite.position.copy(enemy.position);
+                    sprite.userData = enemy.userData; // Copier les données
+                    
+                    // Remplacer le cube par le sprite
+                    scene.remove(enemy);
+                    scene.add(sprite);
+                    
+                    // Mettre à jour la référence dans le tableau enemies
+                    const enemyIndex = enemies.indexOf(enemy);
+                    if (enemyIndex !== -1) {
+                        enemies[enemyIndex] = sprite;
+                    }
+                },
+                // Progression (optionnel)
+                undefined,
+                // Erreur - Garder le cube coloré
+                (error) => {
+                    console.log(`⚠️ Image non trouvée: ${imageFileName} - Utilisation du cube coloré`);
+                }
+            );
+        }
+
+        function completeWave() {
+            console.log(`🎉 Vague ${gameState.currentWave + 1} terminée !`);
+            gameState.wavePaused = true;
+            
+            if (gameState.currentWave >= gameState.totalWaves - 1) {
+                // Victoire finale !
+                endGame(true);
+            } else {
+                // Vague suivante
+                showWaveCompleteScreen();
             }
         }
 
-        function startGame() { initGame(); }
+        function startNextWave() {
+            hideAllScreens();
+            showGameElements();
+            startWave(gameState.currentWave + 1);
+        }
 
+        // === CONTRÔLES ===
         function setupControls() {
             document.addEventListener('keydown', (event) => { keys[event.code] = true; });
             document.addEventListener('keyup', (event) => { keys[event.code] = false; });
+            
             document.addEventListener('mousemove', (event) => {
                 if (!isPointerLocked) return;
                 const movementX = event.movementX || 0;
@@ -384,17 +403,31 @@
                 camera.rotation.y = mouse.x;
                 camera.rotation.x = mouse.y;
             });
-            document.addEventListener('mousedown', (event) => { if (event.button === 0) shoot(); });
-            renderer.domElement.addEventListener('click', () => { renderer.domElement.requestPointerLock(); });
-            document.addEventListener('pointerlockchange', () => { isPointerLocked = document.pointerLockElement === renderer.domElement; });
+            
+            document.addEventListener('mousedown', (event) => { 
+                if (event.button === 0) shoot(); 
+            });
+            
+            renderer.domElement.addEventListener('click', () => { 
+                renderer.domElement.requestPointerLock(); 
+            });
+            
+            document.addEventListener('pointerlockchange', () => { 
+                isPointerLocked = document.pointerLockElement === renderer.domElement; 
+            });
         }
 
         function shoot() {
+            if (gameState.wavePaused || gameState.gameOver || gameState.victory) return;
+            
             const now = Date.now();
             if (now - lastShot < 200 || gameState.ammo <= 0) return;
+            
             lastShot = now;
             gameState.ammo--;
             updateHUD();
+            
+            // Créer la balle
             const bulletGeometry = new THREE.SphereGeometry(0.1, 8, 8);
             const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
             const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
@@ -407,31 +440,40 @@
             bullets.push(bullet);
         }
 
+        // === MISE À JOUR DU JEU ===
         function updatePlayer(delta) {
-            const moveSpeed = 15;
+            if (gameState.wavePaused || gameState.gameOver || gameState.victory) return;
+            
+            const moveSpeed = 12;
             const direction = new THREE.Vector3();
+            
             if (keys['KeyW']) direction.z -= 1;
             if (keys['KeyS']) direction.z += 1;
             if (keys['KeyA']) direction.x -= 1;
             if (keys['KeyD']) direction.x += 1;
+            
             if (direction.length() > 0) {
                 direction.normalize();
                 const horizontalDirection = new THREE.Vector3(direction.x, 0, direction.z);
                 horizontalDirection.applyQuaternion(camera.quaternion);
                 horizontalDirection.y = 0;
                 horizontalDirection.normalize();
+                
                 const newPosition = {
                     x: player.x + horizontalDirection.x * moveSpeed * delta,
                     y: player.y,
                     z: player.z + horizontalDirection.z * moveSpeed * delta
                 };
+                
                 if (!checkCollisions(newPosition)) {
                     player.x = newPosition.x;
                     player.z = newPosition.z;
                 }
             }
-            if (keys['Space']) player.y = Math.min(20, player.y + moveSpeed * delta);
+            
+            if (keys['Space']) player.y = Math.min(15, player.y + moveSpeed * delta);
             if (keys['ShiftLeft']) player.y = Math.max(0.5, player.y - moveSpeed * delta);
+            
             camera.position.set(player.x, player.y, player.z);
         }
 
@@ -440,61 +482,56 @@
                 new THREE.Vector3(newPosition.x - 0.5, 0, newPosition.z - 0.5),
                 new THREE.Vector3(newPosition.x + 0.5, 2, newPosition.z + 0.5)
             );
+            
             for (let wall of walls) {
                 const wallBox = new THREE.Box3().setFromObject(wall);
                 if (playerBox.intersectsBox(wallBox)) return true;
             }
-            if (Math.abs(newPosition.x) > 48 || Math.abs(newPosition.z) > 48) return true;
-            return false;
+            
+            return Math.abs(newPosition.x) > 48 || Math.abs(newPosition.z) > 48;
         }
 
         function updateEnemies(delta) {
+            if (gameState.wavePaused || gameState.gameOver || gameState.victory) return;
+            
+            const deadEnemies = [];
+            
             enemies.forEach((enemy, index) => {
                 if (enemy.userData.health <= 0) {
-                    scene.remove(enemy);
-                    enemies.splice(index, 1);
+                    deadEnemies.push(index);
+                    
+                    // Points selon le type d'ennemi
                     let points = 10;
                     switch(enemy.userData.type) {
-                        case 'Zombie': points = 5; break;
-                        case 'Renard': points = 15; break;
-                        case 'Loup': points = 20; break;
-                        case 'Brocoli': points = 25; break;
-                        case 'Artichaut': points = 30; break;
-                        case 'Viking': points = 40; break;
-                        case 'Samouraï': points = 50; break;
-                        case 'Hydre': points = 100; break;
+                        case 'Artichaut': points = 15; break;
+                        case 'Brocoli': points = 20; break;
+                        case 'Hydre': points = 50; break;
+                        case 'Loup': points = 25; break;
+                        case 'Renard': points = 30; break;
+                        case 'Samouraï': points = 40; break;
+                        case 'Viking': points = 45; break;
+                        case 'Zombie': points = 10; break;
                     }
                     gameState.score += points;
-                    gameState.enemiesLeft = enemies.length;
-                    updateHUD();
-                    // Gestion des vagues
-                    if (enemies.length === 0) {
-                        if (currentWave < totalWaves - 1) {
-                            currentWave++;
-                            setTimeout(() => {
-                                createEnemiesForWave(currentWave);
-                                updateHUD();
-                            }, 1500);
-                        } else {
-                            gameState.victory = true;
-                            showVictory();
-                        }
-                    }
                     return;
                 }
-                // IA simple
+                
+                // IA: aller vers le joueur
                 const playerPos = new THREE.Vector3(player.x, 0, player.z);
                 const enemyPos = new THREE.Vector3(enemy.position.x, 0, enemy.position.z);
                 const direction = playerPos.sub(enemyPos).normalize();
+                
                 const newPos = enemy.position.clone();
                 newPos.x += direction.x * enemy.userData.speed * delta;
                 newPos.z += direction.z * enemy.userData.speed * delta;
-                // Collision murs
+                
+                // Vérifier collisions avec murs
+                let canMove = true;
                 const enemyBox = new THREE.Box3(
                     new THREE.Vector3(newPos.x - 1, 0, newPos.z - 1),
                     new THREE.Vector3(newPos.x + 1, 3, newPos.z + 1)
                 );
-                let canMove = true;
+                
                 for (let wall of walls) {
                     const wallBox = new THREE.Box3().setFromObject(wall);
                     if (enemyBox.intersectsBox(wallBox)) {
@@ -502,114 +539,220 @@
                         break;
                     }
                 }
+                
                 if (canMove) {
                     enemy.position.x = newPos.x;
                     enemy.position.z = newPos.z;
                 }
-                // Attaque si proche
+                
+                // Attaquer le joueur si proche
                 const distToPlayer = enemy.position.distanceTo(new THREE.Vector3(player.x, enemy.position.y, player.z));
-                if (distToPlayer < 3 && Date.now() - enemy.userData.lastAttack > 1000) {
+                if (distToPlayer < 4 && Date.now() - enemy.userData.lastAttack > 1000) {
                     enemy.userData.lastAttack = Date.now();
                     gameState.health -= enemy.userData.damage;
-                    updateHUD();
-                    if (enemy.material && enemy.material.color) {
+                    
+                    // Effet visuel d'attaque (fonctionne pour cube ET sprite)
+                    if (enemy.material) {
+                        // Pour les cubes
+                        const originalColor = enemy.material.color.getHex();
                         enemy.material.color.setHex(0xff0000);
-                        setTimeout(() => { if (enemy.material && enemy.material.color) enemy.material.color.setHex(0xffffff); }, 100);
+                        setTimeout(() => enemy.material.color.setHex(originalColor), 200);
+                    } else if (enemy.material && enemy.material.color) {
+                        // Pour les sprites
+                        enemy.material.color.setRGB(1, 0.5, 0.5);
+                        setTimeout(() => enemy.material.color.setRGB(1, 1, 1), 200);
                     }
+                    
                     if (gameState.health <= 0) {
-                        gameState.gameOver = true;
-                        showGameOver();
+                        endGame(false);
+                        return;
                     }
                 }
             });
+            
+            // Supprimer les ennemis morts
+            deadEnemies.reverse().forEach(index => {
+                scene.remove(enemies[index]);
+                enemies.splice(index, 1);
+            });
+            
+            // Vérifier si la vague est terminée
+            if (enemies.length === 0) {
+                completeWave();
+            }
+            
+            updateHUD();
         }
 
         function updateBullets(delta) {
-            bullets.forEach((bullet, index) => {
+            if (gameState.wavePaused || gameState.gameOver || gameState.victory) return;
+            
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
                 bullet.position.add(bullet.userData.velocity.clone().multiplyScalar(delta));
                 bullet.userData.life--;
+                
+                // Supprimer les balles expirées
                 if (bullet.userData.life <= 0) {
                     scene.remove(bullet);
-                    bullets.splice(index, 1);
-                    return;
+                    bullets.splice(i, 1);
+                    continue;
                 }
-                enemies.forEach(enemy => {
+                
+                // Collision avec ennemis
+                let hit = false;
+                for (let j = 0; j < enemies.length; j++) {
+                    const enemy = enemies[j];
                     if (bullet.position.distanceTo(enemy.position) < 2) {
                         enemy.userData.health -= 50;
-                        if (enemy.material && enemy.material.color) {
-                            enemy.material.color.setHex(0xff8888);
-                            setTimeout(() => { if (enemy.material && enemy.material.color) enemy.material.color.setHex(0xffffff); }, 100);
+                        
+                        // Effet visuel de hit (fonctionne pour cube ET sprite)
+                        if (enemy.material) {
+                            if (enemy.material.color) {
+                                // Pour les cubes
+                                const originalColor = enemy.material.color.getHex();
+                                enemy.material.color.setHex(0xff8888);
+                                setTimeout(() => enemy.material.color.setHex(originalColor), 100);
+                            } else {
+                                // Pour les sprites
+                                enemy.material.color.setRGB(1, 0.5, 0.5);
+                                setTimeout(() => enemy.material.color.setRGB(1, 1, 1), 100);
+                            }
                         }
+                        
                         scene.remove(bullet);
-                        bullets.splice(index, 1);
+                        bullets.splice(i, 1);
+                        hit = true;
+                        console.log(`💥 ${enemy.userData.type} touché ! Vie: ${enemy.userData.health}`);
+                        break;
                     }
-                });
+                }
+                
+                if (hit) continue;
+                
+                // Collision avec murs
                 const bulletBox = new THREE.Box3().setFromObject(bullet);
                 for (let wall of walls) {
                     const wallBox = new THREE.Box3().setFromObject(wall);
                     if (bulletBox.intersectsBox(wallBox)) {
                         scene.remove(bullet);
-                        bullets.splice(index, 1);
+                        bullets.splice(i, 1);
                         break;
                     }
                 }
-            });
+            }
         }
 
         function autoReload() {
             if (gameState.ammo === 0) {
                 setTimeout(() => {
-                    gameState.ammo = 30;
+                    gameState.ammo = gameState.maxAmmo;
                     updateHUD();
                 }, 2000);
             }
         }
 
+        // === INTERFACE ===
         function updateHUD() {
-            document.getElementById('scoreDisplay').textContent = gameState.score;
             document.getElementById('healthDisplay').textContent = gameState.health;
             document.getElementById('ammoDisplay').textContent = gameState.ammo;
-            document.getElementById('enemiesDisplay').textContent = gameState.enemiesLeft;
-            document.getElementById('waveDisplay').textContent = (currentWave + 1);
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            document.getElementById('enemiesDisplay').textContent = enemies.length;
+            document.getElementById('waveDisplay').textContent = gameState.currentWave + 1;
         }
 
-        function showGameOver() {
-            document.getElementById('finalScore').textContent = gameState.score;
-            document.getElementById('gameOverScreen').style.display = 'flex';
+        function hideAllScreens() {
+            document.getElementById('menuScreen').style.display = 'none';
+            document.getElementById('waveCompleteScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('victoryScreen').style.display = 'none';
+        }
+
+        function showGameElements() {
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('crosshair').classList.remove('hidden');
+            document.getElementById('instructions').classList.remove('hidden');
+        }
+
+        function hideGameElements() {
             document.getElementById('hud').classList.add('hidden');
             document.getElementById('crosshair').classList.add('hidden');
             document.getElementById('instructions').classList.add('hidden');
         }
 
-        function showVictory() {
-            document.getElementById('victoryScore').textContent = gameState.score;
-            document.getElementById('victoryScreen').style.display = 'flex';
-            document.getElementById('hud').classList.add('hidden');
-            document.getElementById('crosshair').classList.add('hidden');
-            document.getElementById('instructions').classList.add('hidden');
+        function showWaveCompleteScreen() {
+            hideGameElements();
+            document.getElementById('waveScore').textContent = gameState.score;
+            document.getElementById('nextWaveNumber').textContent = gameState.currentWave + 2;
+            
+            if (gameState.currentWave + 1 < gameState.totalWaves) {
+                document.getElementById('nextEnemyName').textContent = enemyTypes[gameState.currentWave + 1].name;
+            }
+            
+            document.getElementById('waveCompleteScreen').style.display = 'flex';
         }
 
+        function endGame(victory) {
+            gameState.gameOver = !victory;
+            gameState.victory = victory;
+            hideGameElements();
+            
+            if (victory) {
+                document.getElementById('victoryScore').textContent = gameState.score;
+                document.getElementById('victoryScreen').style.display = 'flex';
+            } else {
+                document.getElementById('finalScore').textContent = gameState.score;
+                document.getElementById('deathWave').textContent = gameState.currentWave + 1;
+                document.getElementById('gameOverScreen').style.display = 'flex';
+            }
+        }
+
+        function restartGame() {
+            // Nettoyer
+            if (renderer && renderer.domElement) {
+                renderer.domElement.remove();
+            }
+            if (scene) {
+                while(scene.children.length > 0) {
+                    scene.remove(scene.children[0]);
+                }
+            }
+            
+            enemies = [];
+            bullets = [];
+            walls = [];
+            player = { x: 0, y: 1.8, z: 0 };
+            mouse = { x: 0, y: 0 };
+            keys = {};
+            isPointerLocked = false;
+            
+            hideAllScreens();
+            document.getElementById('menuScreen').style.display = 'flex';
+        }
+
+        // === BOUCLE PRINCIPALE ===
         function animate() {
             if (gameState.gameOver || gameState.victory) return;
+            
             requestAnimationFrame(animate);
+            
             if (!renderer || !scene || !camera) return;
+            
             const delta = clock.getDelta();
+            
             updatePlayer(delta);
             updateEnemies(delta);
             updateBullets(delta);
             autoReload();
-            try { renderer.render(scene, camera); } catch (error) { }
+            
+            try {
+                renderer.render(scene, camera);
+            } catch (error) {
+                console.error("Erreur de rendu:", error);
+            }
         }
 
-        function debugGame() {
-            console.log("Scene:", scene);
-            console.log("Camera:", camera);
-            console.log("Renderer:", renderer);
-            console.log("Enemies:", enemies.length);
-            console.log("Player position:", player);
-        }
-        window.debugGame = debugGame;
-
+        // === REDIMENSIONNEMENT ===
         window.addEventListener('resize', () => {
             if (camera && renderer) {
                 camera.aspect = window.innerWidth / window.innerHeight;
